@@ -21,16 +21,26 @@ namespace MagicVilla_VillaAPI.Controllers
         // IEnumerable<Villa>  represents a collection of VillaDTO objects that can be enumerated using a foreach loop.
         // When we expose the data to the end user of the controller, we do not want to send the date - use VillaDTO
         [HttpGet]
-        public IEnumerable<VillaDTO> GetVillas()
+        public ActionResult<IEnumerable<VillaDTO>> GetVillas()
         {
-            return VillaStore.villaList;     
+            return Ok(VillaStore.villaList);     
         }
 
         // In order to define that this HttpGet call expects an id parameter, we have to explicitly write the id parameter.
-        [HttpGet("id")]
-        public VillaDTO GetVilla(int id)
+        // [HttpGet("id")] - works fine
+        [HttpGet("{id:int}")]
+        public ActionResult<VillaDTO> GetVilla(int id)
         {
-            return VillaStore.villaList.FirstOrDefault(u=>u.Id==id);
+            if(id == 0)
+            {
+                return BadRequest();
+            }
+            var villa = VillaStore.villaList.FirstOrDefault(u => u.Id == id);
+            if (villa == null)
+            {
+                return NotFound();
+            }
+            return Ok(villa);
             // retrieves the first element from the VillaStore.villaList that matches the condition u.Id == id, or returns null if no such element is found.
         }
         // Why the Return Type Cannot Be IEnumerable<VillaDTO>
@@ -39,10 +49,17 @@ namespace MagicVilla_VillaAPI.Controllers
 
     }
 }
+// Why DTO?
 // In the controller here, we are directly using the Villa model.
 // In production, we have dtos - dtos provide a wrapper between the entity or the database model and what is being exposed from the API.
 
-
+// Debug-help:
 // Whenever you cannot find a reasonable direction from the swagger endpoint, you can always go to the controller and see what the endpoint is.
 // In this case, the endpoint is localhost:44350/api/villaAPI 
 // Swagger + Code
+
+// ActionResult:
+// ActionResult is an abstract class that represents the result of an action method.
+// The ActionResult type is a versatile return type in ASP.NET Core controllers. It allows you to return:
+// 1. A specific result object (e.g., VillaDTO).
+// 2. An HTTP response with a status code and optional data.
