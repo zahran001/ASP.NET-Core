@@ -2,6 +2,8 @@
 
 namespace MagicVilla_VillaAPI.Data
 {
+    // The VillaStore class is static to provide a simple, globally accessible, and consistent in-memory data store for VillaDTO objects.
+    // Since the data is stored in a static field, it remains in memory for the lifetime of the application.
     public static class VillaStore
     {
         public static List<VillaDTO> villaList = new List<VillaDTO> {

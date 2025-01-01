@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using MagicVilla_VillaAPI.Models.Dto;
 using MagicVilla_VillaAPI.Data;
 using System.Xml.Linq;
+using System.Buffers.Text;
 
 // After declaring a namespace, subsequent code belongs to that namespace unless explicitly overridden.
 namespace MagicVilla_VillaAPI.Controllers
@@ -28,7 +29,12 @@ namespace MagicVilla_VillaAPI.Controllers
 
         // In order to define that this HttpGet call expects an id parameter, we have to explicitly write the id parameter.
         // [HttpGet("id")] - works fine
-        [HttpGet("{id:int}")]
+        [HttpGet("{id:int}", Name ="GetVilla")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        // [ProducesResponseType(200, Type = typeof(VillaDTO))] - Use this if you want to specify the type of the response (in case you don't do it like the code below)
+        
         public ActionResult<VillaDTO> GetVilla(int id)
         {
             if(id == 0)
@@ -46,6 +52,35 @@ namespace MagicVilla_VillaAPI.Controllers
         // Why the Return Type Cannot Be IEnumerable<VillaDTO>
         // The return type of the GetVillas method cannot be IEnumerable<VillaDTO> because the method is supposed to return a single VillaDTO object, not a collection of VillaDTO objects.
 
+        [HttpPost]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        public ActionResult<VillaDTO> CreateVilla([FromBody]VillaDTO villaDTO)
+        {
+            if(villaDTO == null)
+            {
+                return BadRequest(villaDTO);
+            }
+            // When we are creating a villa, the Id of the villa should be 0.
+            if(villaDTO.Id > 0)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError);
+            }
+            // fetch the Id for the new villa
+            villaDTO.Id = VillaStore.villaList.OrderByDescending(u => u.Id).FirstOrDefault().Id + 1;
+            VillaStore.villaList.Add(villaDTO);
+            // OrderByDescending sorts the list of villas in descending order based on their Id property.
+            // This means the villa with the highest ID will be the first element in the sorted list.
+            // OrderByDescending(u => u.Id) - Sorts the villaList in descending order based on the Id property of each villa(u represents a villa in the list).
+
+            // return Ok(villaDTO);
+            // When the resource is created, provide the URL where the resource can be accessed.
+            // Provide a link so that they can call the GetVilla method with the id of the newly created villa.
+            return CreatedAtRoute("GetVilla", new { id = villaDTO.Id }, villaDTO);
+            // In order to find the resource where it was created, we need to call the GetVilla method.
+            // Pass the id in a new object and pass the villaDTO object.
+        }
 
     }
 }
@@ -63,3 +98,4 @@ namespace MagicVilla_VillaAPI.Controllers
 // The ActionResult type is a versatile return type in ASP.NET Core controllers. It allows you to return:
 // 1. A specific result object (e.g., VillaDTO).
 // 2. An HTTP response with a status code and optional data.
+
