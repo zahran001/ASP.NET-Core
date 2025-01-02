@@ -4,6 +4,7 @@ using MagicVilla_VillaAPI.Models.Dto;
 using MagicVilla_VillaAPI.Data;
 using System.Xml.Linq;
 using System.Buffers.Text;
+using Microsoft.AspNetCore.JsonPatch;
 
 // After declaring a namespace, subsequent code belongs to that namespace unless explicitly overridden.
 namespace MagicVilla_VillaAPI.Controllers
@@ -133,6 +134,35 @@ namespace MagicVilla_VillaAPI.Controllers
 
             return NoContent();
         }
+
+        // In order to update only one property, we can use the HttpPatch method.
+        // Add the Nuget package - Microsoft.AspNetCore.JsonPatch
+        // https://jsonpatch.com/
+        // Replace
+        // "path": "/name"
+        // path - property name that needs to be updated
+
+        [HttpPatch("{id:int}", Name = "UpdatePartialVilla")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+
+        public IActionResult UpdatePartialVilla(int id, JsonPatchDocument<VillaDTO> patchDTO)
+        {
+            if (patchDTO == null || id == 0)
+            {
+                return BadRequest();
+            }
+            var villa = VillaStore.villaList.FirstOrDefault(u => u.Id == id);
+            patchDTO.ApplyTo(villa, ModelState);
+            // if there are any errors, store them in the ModelState
+            if(!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+            return NoContent();
+        }
+
+
     }
 }
 // Why DTO?
