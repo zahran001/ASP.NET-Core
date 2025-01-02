@@ -94,6 +94,27 @@ namespace MagicVilla_VillaAPI.Controllers
             // Pass the id in a new object and pass the villaDTO object.
         }
 
+        // ActionResult<T>: Strongly Typed - ActionResult<T> is a generic type that combines the flexibility of IActionResult with the type safety of specifying a return type.
+        // IActionResult: When you use IActionResult, the return type of the method is not tied to any specific data type. You have full flexibility but lose compile-time type checking for your responses.
+        [HttpDelete("{id:int}", Name = "DeleteVilla")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public IActionResult DeleteVilla(int id)
+        {
+            if (id ==0)
+            {
+                return BadRequest();
+            }
+            var villa = VillaStore.villaList.FirstOrDefault(u => u.Id == id);
+            if (villa == null)
+            {
+                return NotFound();
+            }
+            VillaStore.villaList.Remove(villa);
+            return NoContent();
+
+        }
     }
 }
 // Why DTO?
