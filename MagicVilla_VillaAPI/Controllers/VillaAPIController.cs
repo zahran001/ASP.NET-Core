@@ -115,6 +115,24 @@ namespace MagicVilla_VillaAPI.Controllers
             return NoContent();
 
         }
+
+        // HttpPut will update the complete villa record
+        [HttpPut("{id:int}", Name = "UpdateVilla")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public IActionResult UpdateVilla(int id, [FromBody] VillaDTO villaDTO)
+        {
+            if (villaDTO == null || id != villaDTO.Id)
+            {
+                return BadRequest();
+            }
+            var villa = VillaStore.villaList.FirstOrDefault(u => u.Id == id);
+            villa.Name = villaDTO.Name;
+            villa.Occupacy = villaDTO.Occupacy;
+            villa.Sqft = villaDTO.Sqft;
+
+            return NoContent();
+        }
     }
 }
 // Why DTO?
@@ -132,3 +150,5 @@ namespace MagicVilla_VillaAPI.Controllers
 // 1. A specific result object (e.g., VillaDTO).
 // 2. An HTTP response with a status code and optional data.
 
+// The response types (ActionResult<IEnumerable<VillaDTO>> or ActionResult<VillaDTO>) and the usage of ProducesResponseType attributes in the code are designed to Define the API's response contract.
+// The return type of the methods (ActionResult<T> or IActionResult) informs consumers of the API (and tools like Swagger) what data and HTTP status codes they can expect from each endpoint.
