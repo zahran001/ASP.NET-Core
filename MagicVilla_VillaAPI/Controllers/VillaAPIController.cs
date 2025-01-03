@@ -20,11 +20,31 @@ namespace MagicVilla_VillaAPI.Controllers
     [ApiController]
     public class VillaAPIController : ControllerBase
     {
+        // Use dependency injection for Implementation of the logger
+        // Constructor - ctor + tab + tab (shortcut)
+
+        // Ilogger is a generic interface that represents a type used to perform logging.
+        private readonly ILogger<VillaAPIController> _logger;
+
+        // private readonly ILogger<VillaAPIController> _logger;
+        // Declares a private field _logger in the VillaAPIController class.
+        // The readonly keyword ensures that the _logger field can only be assigned a value during initialization or in the constructor. This makes the field immutable after the object is constructed.
+        // The type of the field, ILogger<VillaAPIController>, is an interface provided by ASP.NET Core's logging framework.
+        // The generic parameter <VillaAPIController> specifies the source of the logs, helping to categorize logs by the class that generated them.
+
+        // This is the constructor of the VillaAPIController class.
+        // It accepts a parameter of type ILogger<VillaAPIController> named logger.
+        public VillaAPIController(ILogger<VillaAPIController> logger)
+        {
+            _logger = logger;
+            // Assigns the injected logger instance to the private _logger field. This makes the logger available for use throughout the controller.
+        }
         // IEnumerable<Villa>  represents a collection of VillaDTO objects that can be enumerated using a foreach loop.
         // When we expose the data to the end user of the controller, we do not want to send the date - use VillaDTO
         [HttpGet]
         public ActionResult<IEnumerable<VillaDTO>> GetVillas()
         {
+            _logger.LogInformation("Getting all villas");
             return Ok(VillaStore.villaList);     
         }
 
@@ -40,6 +60,7 @@ namespace MagicVilla_VillaAPI.Controllers
         {
             if(id == 0)
             {
+                _logger.LogError("Get Villa Error with Id " + id);
                 return BadRequest();
             }
             var villa = VillaStore.villaList.FirstOrDefault(u => u.Id == id);
@@ -182,3 +203,5 @@ namespace MagicVilla_VillaAPI.Controllers
 
 // The response types (ActionResult<IEnumerable<VillaDTO>> or ActionResult<VillaDTO>) and the usage of ProducesResponseType attributes in the code are designed to Define the API's response contract.
 // The return type of the methods (ActionResult<T> or IActionResult) informs consumers of the API (and tools like Swagger) what data and HTTP status codes they can expect from each endpoint.
+
+// The logger part in the VillaAPIController is implemented using the ILogger interface, which is part of the ASP.NET Core logging framework.

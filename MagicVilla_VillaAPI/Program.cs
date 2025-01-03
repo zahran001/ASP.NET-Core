@@ -1,4 +1,5 @@
 var builder = WebApplication.CreateBuilder(args);
+// logger is already registered in the CreateBuilder method
 
 // Add services to the container.
 
