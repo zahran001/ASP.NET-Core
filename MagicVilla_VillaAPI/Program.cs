@@ -1,4 +1,6 @@
+using MagicVilla_VillaAPI.Data;
 using MagicVilla_VillaAPI.Logging;
+using Microsoft.EntityFrameworkCore;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -17,6 +19,10 @@ builder.Host.UseSerilog(); // tells the application to use the serilog logger in
 // You do NOT need to change the logger in the controllers, services, etc. because they are using the ILogger interface.
 
 // Add services to the container.
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
+{
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultSQLConnection"));
+});
 
 builder.Services.AddControllers(option =>
 {
@@ -51,3 +57,6 @@ app.Run();
 // AddSingleton - The object is created once and shared by all requests.
 // AddTransient - The object is created each time it is requested.
 // AddScoped - The object is created once per request.
+
+// Entity Framework Core uses a scoped service to create a new instance of the DbContext for each HTTP request.
+// Entity Framework Core is an object-relational mapping (ORM) framework that simplifies working with databases using .NET objects.
