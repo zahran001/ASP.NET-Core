@@ -1,3 +1,4 @@
+using MagicVilla_VillaAPI.Logging;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -24,6 +25,9 @@ builder.Services.AddControllers(option =>
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Services.AddSingleton<ILogging, Logging>(); // interface, class (implementation)
+
+
 
 var app = builder.Build();
 
@@ -43,3 +47,7 @@ app.MapControllers();
 app.Run();
 
 // In an HTTP GET request, the Accept header indicates the type(s) of content the client (e.g., a browser or API client) is willing to receive in response to the request.
+
+// AddSingleton - The object is created once and shared by all requests.
+// AddTransient - The object is created each time it is requested.
+// AddScoped - The object is created once per request.

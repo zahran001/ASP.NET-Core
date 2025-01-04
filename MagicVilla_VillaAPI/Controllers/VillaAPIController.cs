@@ -5,6 +5,7 @@ using MagicVilla_VillaAPI.Data;
 using System.Xml.Linq;
 using System.Buffers.Text;
 using Microsoft.AspNetCore.JsonPatch;
+using MagicVilla_VillaAPI.Logging;
 
 // After declaring a namespace, subsequent code belongs to that namespace unless explicitly overridden.
 namespace MagicVilla_VillaAPI.Controllers
@@ -19,7 +20,17 @@ namespace MagicVilla_VillaAPI.Controllers
     [Route ("api/VillaAPI")]
     [ApiController]
     public class VillaAPIController : ControllerBase
-    {
+    {   
+        // We will comment the default logger here and use the new logger which we implement.
+        private readonly ILogging _logger;
+        //Implementation of the ILogging interface
+        public VillaAPIController(ILogging logger)
+        {
+            _logger = logger;
+        }
+
+        /*
+         
         // Use dependency injection for Implementation of the logger
         // Constructor - ctor + tab + tab (shortcut)
 
@@ -39,12 +50,15 @@ namespace MagicVilla_VillaAPI.Controllers
             _logger = logger;
             // Assigns the injected logger instance to the private _logger field. This makes the logger available for use throughout the controller.
         }
+
+        */
+
         // IEnumerable<Villa>  represents a collection of VillaDTO objects that can be enumerated using a foreach loop.
         // When we expose the data to the end user of the controller, we do not want to send the date - use VillaDTO
         [HttpGet]
         public ActionResult<IEnumerable<VillaDTO>> GetVillas()
         {
-            _logger.LogInformation("Getting all villas");
+            _logger.Log("Getting all villas", "");
             return Ok(VillaStore.villaList);     
         }
 
@@ -60,7 +74,7 @@ namespace MagicVilla_VillaAPI.Controllers
         {
             if(id == 0)
             {
-                _logger.LogError("Get Villa Error with Id " + id);
+                _logger.Log("Get Villa Error with Id " + id, "error");
                 return BadRequest();
             }
             var villa = VillaStore.villaList.FirstOrDefault(u => u.Id == id);
