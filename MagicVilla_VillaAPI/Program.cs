@@ -25,7 +25,7 @@ builder.Services.AddControllers(option =>
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-builder.Services.AddSingleton<ILogging, Logging>(); // interface, class (implementation)
+builder.Services.AddSingleton<ILogging, LoggingV2>(); // interface, class (implementation)
 
 
 
