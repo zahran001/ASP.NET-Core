@@ -23,6 +23,7 @@ namespace MagicVilla_VillaAPI.Models
 // You can explicitly use the [Key] attribute to specify a different property as the primary key - install the Nuget package System.ComponentModel.Annotations
 
 /*
+
 The [DatabaseGenerated(DatabaseGeneratedOption.Identity)] attribute in this code specifies how the value of the Id property is generated in the database.
 
 Key Role of [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
@@ -36,7 +37,20 @@ With DatabaseGeneratedOption.Identity, we don't need to set the Id value manuall
 Common Use Case:
 This is often used for auto-incrementing primary keys, where each new row gets a unique, automatically generated value for the Id.
 
- */
+*/
 
-// Entity Framework Core - code first approach
 // DbContext is the primary class that is responsible for interacting with the database.
+// Entity Framework Core - code first approach
+// For that we have to do migration.
+// Tools -> Nuget Package Manager -> Package Manager Console
+// We need to create a set of scripts which will tell the database to create these tables.
+
+// Use the command: add-migration InitialCreate
+// Default project is the one where we have the DbContext class.
+// This command will create a folder called Migrations and a file inside it.
+// Migrations generate SQL scripts that instruct the database to create or modify tables based on entity classes.
+
+// To apply the migration, use the command: update-database
+
+// EFMigrationsHistory table is created in the database to keep track of the migrations that have been applied.
+// It keeps track of how to synchronize the migrations that we have in our code versus database.
