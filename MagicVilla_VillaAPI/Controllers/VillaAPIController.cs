@@ -37,7 +37,6 @@ namespace MagicVilla_VillaAPI.Controllers
         */
 
 
-
         /*
          
         // Use dependency injection for Implementation of the logger
@@ -257,8 +256,16 @@ namespace MagicVilla_VillaAPI.Controllers
             {
                 return BadRequest();
             }
-            var villa = _db.Villas.AsNoTracking().FirstOrDefault(u => u.Id == id); // retrieve the actual villa
+            var villa = _db.Villas.AsNoTracking().FirstOrDefault(u => u.Id == id); 
+            // retrieve the actual villa
             // In the patch request, we don't get the complete object, we get only the properties that had to be updated. 
+
+            // EF Core is already tracking the villa object with Id 6. If you update any property and without the update command if you hit SaveChanges - it will automatically updates that in the database.
+            // We don't want this feature now.
+            // We are not making changes to this villa object. When we are updaing, we are passing the model - we want EF Core to track this model and update that.
+
+            //villa.Name = "Test";
+            //_db.SaveChanges();
 
             // When we are applying here, the type is VillaDTO
             // We have to convert this Villa object to a VillaDTO object
@@ -329,3 +336,14 @@ namespace MagicVilla_VillaAPI.Controllers
 // The return type of the methods (ActionResult<T> or IActionResult) informs consumers of the API (and tools like Swagger) what data and HTTP status codes they can expect from each endpoint.
 
 // The logger part in the VillaAPIController is implemented using the ILogger interface, which is part of the ASP.NET Core logging framework.
+
+/*
+ A common error in EF Core:
+ System.InvalidOperationException: 'The instance of the entity type cannot be tracked because another instance with the same key value for {'Id'} is already being tracked. When attaching existing entities, ensure that only one entity instance with a given key value is attached.'
+ My case:
+ Whenever we use FirstOrDefault, it actually keeps a track of that entity. When this line is executed, it is tracking the villa with the Id of 6 that we added.
+ Finally, when we are updating, we are passing model with the same Id of 6. EF Core is confused here because it is already tracking that object.
+ It was trying to track both the models with the same Id. It can only track one Id at a time.
+ To avoid this, when we retrieve this FirstOrDefault, we can use AsNoTracking() method. This will not track the object. It will just retrieve the object and give it to us.
+    
+*/
