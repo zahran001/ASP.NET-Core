@@ -6,6 +6,7 @@ using System.Xml.Linq;
 using System.Buffers.Text;
 using Microsoft.AspNetCore.JsonPatch;
 using MagicVilla_VillaAPI.Logging;
+using Microsoft.EntityFrameworkCore;
 
 // After declaring a namespace, subsequent code belongs to that namespace unless explicitly overridden.
 namespace MagicVilla_VillaAPI.Controllers
@@ -20,7 +21,11 @@ namespace MagicVilla_VillaAPI.Controllers
     [Route ("api/VillaAPI")]
     [ApiController]
     public class VillaAPIController : ControllerBase
-    {   
+    {
+        // ASP.NET Core does not support multiple constructors with dependency injection.
+
+        /*
+        
         // We will comment the default logger here and use the new logger which we implement.
         private readonly ILogging _logger;
         //Implementation of the ILogging interface
@@ -28,6 +33,10 @@ namespace MagicVilla_VillaAPI.Controllers
         {
             _logger = logger;
         }
+
+        */
+
+
 
         /*
          
@@ -53,13 +62,36 @@ namespace MagicVilla_VillaAPI.Controllers
 
         */
 
+        /*
+         
+        We won't be using the VillaStore class anymore. We will be using the ApplicationDbContext class to interact with the database.
+        We already added that to the container when we registered the DbContext in the Program.cs file.
+        Since we have registered the service in the container, we can extract that using DI.
+         
+        */
+
+        // Create a private readonly field of type ApplicationDbContext named _db.
+        private readonly ApplicationDbContext _db;
+        private readonly ILogging _logger;
+        // Add a constructor that accepts an ApplicationDbContext parameter and assigns it to the _db field.
+        public VillaAPIController(ILogging logger, ApplicationDbContext db)
+        {
+            _logger = logger;
+            _db = db;
+        }
+        /*
+        The above code snippet declares a private readonly field _db of type ApplicationDbContext and assigns it through the constructor. 
+        This setup allows the VillaAPIController to use the ApplicationDbContext instance for database operations, leveraging the dependency injection system in ASP.NET Core to provide the necessary configuration and lifecycle management.
+        */
+
+
         // IEnumerable<Villa>  represents a collection of VillaDTO objects that can be enumerated using a foreach loop.
         // When we expose the data to the end user of the controller, we do not want to send the date - use VillaDTO
         [HttpGet]
         public ActionResult<IEnumerable<VillaDTO>> GetVillas()
         {
             _logger.Log("Getting all villas", "");
-            return Ok(VillaStore.villaList);     
+            return Ok(_db.Villas.ToList());     
         }
 
         // In order to define that this HttpGet call expects an id parameter, we have to explicitly write the id parameter.
@@ -77,7 +109,8 @@ namespace MagicVilla_VillaAPI.Controllers
                 _logger.Log("Get Villa Error with Id " + id, "error");
                 return BadRequest();
             }
-            var villa = VillaStore.villaList.FirstOrDefault(u => u.Id == id);
+            var villa = _db.Villas.FirstOrDefault(u => u.Id == id);
+            // We do NOT have to write any SQL, EF Core will automatically translate this into SQL.
             if (villa == null)
             {
                 return NotFound();
@@ -101,7 +134,7 @@ namespace MagicVilla_VillaAPI.Controllers
             //}
 
             // Custom validation for unique villa name
-            if(VillaStore.villaList.FirstOrDefault(u=>u.Name.ToLower() == villaDTO.Name.ToLower()) != null)
+            if(_db.Villas.FirstOrDefault(u=>u.Name.ToLower() == villaDTO.Name.ToLower()) != null)
             {
                 ModelState.AddModelError("CustomError", "Villa name must be unique"); // First parameter denotes the key name - has to be unique but can be empty
                 return BadRequest(ModelState);
@@ -115,9 +148,26 @@ namespace MagicVilla_VillaAPI.Controllers
             {
                 return StatusCode(StatusCodes.Status500InternalServerError);
             }
-            // fetch the Id for the new villa
-            villaDTO.Id = VillaStore.villaList.OrderByDescending(u => u.Id).FirstOrDefault().Id + 1;
-            VillaStore.villaList.Add(villaDTO);
+            // fetch the Id for the new villa - NO LONGER NEEDED - EF Core will automatically generate the Id since it's an identity column.
+            //villaDTO.Id = VillaStore.villaList.OrderByDescending(u => u.Id).FirstOrDefault().Id + 1;
+            //VillaStore.villaList.Add(villaDTO);
+
+            // It cannot implicitly convert VillaDTO to Villa - we have to do a manual conversion.
+            // new () is shorthand for creating a new instance of the Villa class using its parameterless constructor.
+            Villa model = new ()
+            {
+                Amenity = villaDTO.Amenity,
+                Details = villaDTO.Details,
+                Id = villaDTO.Id,
+                ImageUrl = villaDTO.ImageUrl,
+                Name = villaDTO.Name,
+                Occupacy = villaDTO.Occupacy,
+                Rate = villaDTO.Rate,
+                Sqft = villaDTO.Sqft,
+            };
+            _db.Villas.Add(model);
+            _db.SaveChanges(); // gather all the changes that it has to make and push it to the database.
+
             // OrderByDescending sorts the list of villas in descending order based on their Id property.
             // This means the villa with the highest ID will be the first element in the sorted list.
             // OrderByDescending(u => u.Id) - Sorts the villaList in descending order based on the Id property of each villa(u represents a villa in the list).
@@ -142,12 +192,14 @@ namespace MagicVilla_VillaAPI.Controllers
             {
                 return BadRequest();
             }
-            var villa = VillaStore.villaList.FirstOrDefault(u => u.Id == id);
+            var villa = _db.Villas.FirstOrDefault(u => u.Id == id);
             if (villa == null)
             {
                 return NotFound();
             }
-            VillaStore.villaList.Remove(villa);
+            // When we retrieve it from the database, it will be of type Villa - no conversion needed
+            _db.Villas.Remove(villa);
+            _db.SaveChanges();
             return NoContent();
 
         }
@@ -162,10 +214,28 @@ namespace MagicVilla_VillaAPI.Controllers
             {
                 return BadRequest();
             }
-            var villa = VillaStore.villaList.FirstOrDefault(u => u.Id == id);
-            villa.Name = villaDTO.Name;
-            villa.Occupacy = villaDTO.Occupacy;
-            villa.Sqft = villaDTO.Sqft;
+
+            //var villa = VillaStore.villaList.FirstOrDefault(u => u.Id == id);
+            //villa.Name = villaDTO.Name;
+            //villa.Occupacy = villaDTO.Occupacy;
+            //villa.Sqft = villaDTO.Sqft;
+
+            // EF Core will figure out what records to update based on the Id
+            // Convert VillaDTO to Villa object
+            Villa model = new()
+            {
+                Amenity = villaDTO.Amenity,
+                Details = villaDTO.Details,
+                Id = villaDTO.Id,
+                ImageUrl = villaDTO.ImageUrl,
+                Name = villaDTO.Name,
+                Occupacy = villaDTO.Occupacy,
+                Rate = villaDTO.Rate,
+                Sqft = villaDTO.Sqft,
+            };
+
+            _db.Villas.Update(model);
+            _db.SaveChanges();
 
             return NoContent();
         }
@@ -187,10 +257,50 @@ namespace MagicVilla_VillaAPI.Controllers
             {
                 return BadRequest();
             }
-            var villa = VillaStore.villaList.FirstOrDefault(u => u.Id == id);
-            patchDTO.ApplyTo(villa, ModelState);
+            var villa = _db.Villas.AsNoTracking().FirstOrDefault(u => u.Id == id); // retrieve the actual villa
+            // In the patch request, we don't get the complete object, we get only the properties that had to be updated. 
+
+            // When we are applying here, the type is VillaDTO
+            // We have to convert this Villa object to a VillaDTO object
+
+            VillaDTO villaDTO = new()
+            {
+                Amenity = villa.Amenity,
+                Details = villa.Details,
+                Id = villa.Id,
+                ImageUrl = villa.ImageUrl,
+                Name = villa.Name,
+                Occupacy = villa.Occupacy,
+                Rate = villa.Rate,
+                Sqft = villa.Sqft,
+            };        
+            if (villa == null)
+            {
+                return BadRequest();
+            }
+            patchDTO.ApplyTo(villaDTO, ModelState);
+            // Any changes that we have in PatchDTO, which is of type VillaDTO, will be applied to this local variable villaDTO.
+            // Once we have that, then we can update the record.
+            // In order to call the update in EF Core, we have to convert this VillaDTO object back to a Villa object.
+            // We have to do the reverse of what we did in the beginning before we can update that.
+
+            Villa model = new()
+            {
+                Amenity = villaDTO.Amenity,
+                Details = villaDTO.Details,
+                Id = villaDTO.Id,
+                ImageUrl = villaDTO.ImageUrl,
+                Name = villaDTO.Name,
+                Occupacy = villaDTO.Occupacy,
+                Rate = villaDTO.Rate,
+                Sqft = villaDTO.Sqft,
+            };
+
+            _db.Villas.Update(model);
+            _db.SaveChanges();
+
             // if there are any errors, store them in the ModelState
-            if(!ModelState.IsValid)
+            if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
             }
