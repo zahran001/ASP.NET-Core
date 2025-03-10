@@ -30,7 +30,8 @@ VillaAPI is a RESTful API built with ASP.NET Core that manages villa information
 ### Installation
 
 1. **Clone the repository**:
-   - git clone https://github.com/yourusername/VillaAPI.git cd VillaAPI
+   - git clone https://github.com/yourusername/VillaAPI.git
+   - cd VillaAPI
 2. **Set up the database**:
    - Update the connection string in `appsettings.json`:
    -  "ConnectionStrings": {
