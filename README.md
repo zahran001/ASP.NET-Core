@@ -2,7 +2,7 @@
 
 ## Overview
 
-VillaAPI is a RESTful API built with ASP.NET Core that manages villa information. This API allows clients to perform CRUD operations on villa data, including creating, reading, updating, and deleting villa records. The project leverages Entity Framework Core for database interactions and follows best practices for API development.
+A RESTful API built with ASP.NET Core that manages property information. This API allows clients to perform CRUD operations on the data, including creating, reading, updating, and deleting records. The project leverages Entity Framework Core for database interactions and follows best practices for API development.
 
 ## Features
 
